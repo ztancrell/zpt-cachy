@@ -24,9 +24,15 @@ the Mac, my homestead X11 stack on both. Personal use first.
 ## Open questions
 - Which T2 patch source for the kernel: KaiT2en's set, t2linux's `linux-t2-patches`, or both? Do
   they apply cleanly on top of linux-cachyos's own patches?
-- Where to host the repo (GitHub releases, a static host, local only)?
+- Where to host the repo publicly (GitHub releases, a static host)? For now: local.
 - Rebuild automation: CachyOS ships kernels often; script/CI to rebuild + smoke-test.
 - Licensing/naming: KaiT2en is MIT with a TRADEMARK.md; check what redistribution requires.
 
 ## Decided
 - Name: zpt2linux. Layered on CachyOS, ISO + package repo, for Mac + desktop. (2026-11-09)
+- Repo first, ISO last. Mac install = existing T2-capable ISO + CachyOS + this repo +
+  `pacman -S zpt2linux-mac`. Own archiso profile only if reinstalls become frequent. (2026-11-09)
+- Config ships too: dotfiles (openbox, tint2, ...) as a `zpt2linux-config` package, so both
+  machines get the setup, not just the software. (2026-11-09)
+- Build order: homestead packages + local repo + `zpt2linux-desktop`, proven on the desktop;
+  then KaiT2en packages; then `linux-cachyos-t2`. Repo is local (`file://`) for now. (2026-11-09)
