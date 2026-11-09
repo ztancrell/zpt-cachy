@@ -3,7 +3,7 @@
 pkgname=xlibre-xserver-homestead
 _commit=b92b2c5dbc0ed438a697dcc9c881eeb299f14ecd
 pkgver=25.2.0.r24070.gb92b2c5
-pkgrel=1
+pkgrel=2
 pkgdesc="XLibre X server (homestead fork), incl. common files and SDK"
 arch=('x86_64')
 url="https://github.com/ztancrell/xserver"
@@ -40,6 +40,8 @@ build() {
     -D udev=true \
     -D systemd_logind=true \
     -D seatd_libseat=false \
+    -D xvfb=false \
+    -D xnest=false \
     -D suid_wrapper=false \
     -D legacy_nvidia_padding=false \
     -D xkb_dir=/usr/share/X11/xkb \
