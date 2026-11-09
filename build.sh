@@ -16,7 +16,7 @@ for d in pkgs/*/; do
     echo "=== $n: FAILED"; failed="$failed $n"
   fi
 done
-repo-add -n -R repo/zpt2linux.db.tar.zst repo/*.pkg.tar.zst
+repo-add -R repo/zpt2linux.db.tar.zst repo/*.pkg.tar.zst
 echo "SUMMARY: failed:${failed:- none}"
 ls repo/*.pkg.tar.zst
 [ -z "$failed" ]
