@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build every package in pkgs/ and index it into repo/zpt2linux.db. Installs nothing:
+# Build every package in pkgs/ and index it into repo/zpt-cachy.db. Installs nothing:
 # missing build deps make makepkg fail and are listed in the summary for you to install.
 # Usage: ./build.sh [pkgs/<dir>/ ...]  (default: every dir). MAKEPKG_EXTRA is appended to makepkg's
 # flags (CI sets "-s --noconfirm" to install build deps in its throwaway container).
@@ -13,14 +13,14 @@ for d in "$@"; do
   echo "=== $n"
   # Meta-packages depend on packages that live only in this repo, and DKMS packages build
   # nothing but depend on dkms, so skip the dep check for both.
-  case $n in zpt2linux-*|*-dkms) flags=-fd ;; *) flags=-f ;; esac
+  case $n in zpt-cachy-*|*-dkms) flags=-fd ;; *) flags=-f ;; esac
   if (cd "$d" && makepkg $flags $MAKEPKG_EXTRA && for f in $(makepkg --packagelist); do [ -f "$f" ] && cp "$f" ../../repo/; done); then
     echo "=== $n: OK"
   else
     echo "=== $n: FAILED"; failed="$failed $n"
   fi
 done
-repo-add -R repo/zpt2linux.db.tar.zst repo/*.pkg.tar.zst
+repo-add -R repo/zpt-cachy.db.tar.zst repo/*.pkg.tar.zst
 echo "SUMMARY: failed:${failed:- none}"
 ls repo/*.pkg.tar.zst
 [ -z "$failed" ]

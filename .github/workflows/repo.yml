@@ -15,7 +15,7 @@ defaults:
   run:
     shell: bash
 env:
-  KEY: 1DEAC2960F73252F7D1DA8CCACDEC7B1A4F94116  # zpt2linux.asc
+  KEY: 3A6F07D9D227FB888250B4A3AB192A45ADE20A55  # zpt-cachy.asc
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -64,16 +64,16 @@ jobs:
           gpg --batch --import <<< "$GPG_PRIVATE_KEY"
           cd repo
           for f in *.pkg.tar.zst; do gpg --batch -u "$KEY" --detach-sign "$f"; done
-          rm -f zpt2linux.*
-          repo-add --sign --verify --key "$KEY" zpt2linux.db.tar.zst *.pkg.tar.zst
+          rm -f zpt-cachy.*
+          repo-add --sign --verify --key "$KEY" zpt-cachy.db.tar.zst *.pkg.tar.zst
       - name: Publish rolling release "repo"
         if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          mkdir dist && cp -L repo/* dist/  # real files: pacman fetches zpt2linux.db, not the symlink target
+          mkdir dist && cp -L repo/* dist/  # real files: pacman fetches zpt-cachy.db, not the symlink target
           gh release delete repo -R "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
-          gh release create repo dist/* -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "zpt2linux pacman repo" \
+          gh release create repo dist/* -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "zpt-cachy pacman repo" \
             --notes "Signed pacman repo built from $GITHUB_SHA. Server = https://github.com/$GITHUB_REPOSITORY/releases/download/repo"
           # GitHub rewrites some characters in asset names; any rename would break pacman downloads.
           diff <(ls dist | sort) <(gh release view repo -R "$GITHUB_REPOSITORY" --json assets -q '.assets[].name' | sort)

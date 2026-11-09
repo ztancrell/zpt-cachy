@@ -1,10 +1,13 @@
-pkgname=zpt2linux-mac
+pkgname=zpt-cachy-mac
 pkgver=1
 pkgrel=1
-pkgdesc="zpt2linux MacBookPro16,1: T2 drivers and services built from KaiT2en"
+pkgdesc="zpt-cachy MacBookPro16,1: T2 drivers and services built from KaiT2en"
 arch=('any')
-url="https://github.com/ztancrell/zpt2linux"
+url="https://github.com/ztancrell/zpt-cachy"
 license=('MIT')
+provides=('zpt2linux-mac')
+conflicts=('zpt2linux-mac')
+replaces=('zpt2linux-mac')
 depends=('t2bce_stack-dkms' 't2smc-dkms' 't2bdrm-dkms' 't2touchbar-dkms' 'hid_t2magicmouse-dkms'
          't2_precision_trackpad-dkms' 't2_trackpad_actuator-dkms' 't2mfi_fastcharge-dkms'
          't2gmux-dkms' 't2thunderbolt-dkms' 't2smp-dkms' 't2sbs-dkms'

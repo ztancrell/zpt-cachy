@@ -2,12 +2,12 @@
 pkgname=fastcompmgr-homestead
 _commit=5a86f80663f4d8fb6eec6576faccafb580c4d2a4
 pkgver=r161.g5a86f80
-pkgrel=1
+pkgrel=2
 pkgdesc="Compton-based X11 compositor focused on performance (homestead fork)"
 arch=('x86_64')
 url="https://github.com/ztancrell/fastcompmgr"
 license=('MIT')
-depends=('glibc' 'libx11' 'libxcomposite' 'libxdamage' 'libxfixes' 'libxrender')
+depends=('glibc' 'libx11' 'libxcomposite' 'libxdamage' 'libxext' 'libxfixes' 'libxrandr' 'libxrender')
 makedepends=('git')
 provides=('fastcompmgr')
 conflicts=('fastcompmgr')

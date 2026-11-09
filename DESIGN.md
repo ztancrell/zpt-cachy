@@ -1,12 +1,12 @@
-# zpt2linux — DESIGN
+# zpt-cachy — DESIGN
 
 ## Idea
 My own CachyOS setup, not a distro, on two machines: the desktop and a MacBookPro16,1 (2019 16",
 Intel T2, i9-9880H + Radeon Pro 5500M). Three parts:
 - **CachyOS** repos and kernels used as-is.
 - **This repo:** a local pacman repo with my homestead X stack (`../homestead`: xserver, libinput
-  driver, openbox, fastcompmgr, tint2) and the meta-package `zpt2linux-desktop`; for the Mac, T2
-  packages built from KaiT2en-Fedora plus `bankstown-lv2`, and the meta-package `zpt2linux-mac`.
+  driver, openbox, fastcompmgr, tint2) and the meta-package `zpt-cachy-desktop`; for the Mac, T2
+  packages built from KaiT2en-Fedora plus `bankstown-lv2`, and the meta-package `zpt-cachy-mac`.
 - **Dotfiles repo** ([ztancrell/dotfiles](https://github.com/ztancrell/dotfiles), bare repo at
   `~/.dotfiles`, `$HOME` as work tree): configs, wallpapers, icons, themes. Backed up hourly by
   `dotfiles-backup.timer`.
@@ -26,7 +26,7 @@ A fresh install is CachyOS + dotfiles checkout + this repo (steps in README "Fre
   per-kernel rebuild package later, or wait for them upstream?
 - Ask KaiT2en whether shipping their binaries/units that contain "kait2en" (`kait2en-touchbar`,
   `kait2en-t2-*.service`) in my repo is fine.
-- Should `zpt2linux-desktop` also depend on my everyday apps, so one install restores everything?
+- Should `zpt-cachy-desktop` also depend on my everyday apps, so one install restores everything?
 
 ## Decided
 - Not a distro; my CachyOS setup. Packages here, configs/wallpapers in the dotfiles repo (bare repo,
@@ -48,8 +48,17 @@ A fresh install is CachyOS + dotfiles checkout + this repo (steps in README "Fre
   the signed repo as the rolling GitHub release `repo`. Signing key `zpt2linux.asc`. The local
   `file://` repo stays for testing unpushed changes. (2026-11-09)
 - Name: zpt2linux. Layered on CachyOS. (2026-11-09)
+- Renamed zpt2linux → zpt-cachy: it's my CachyOS setup, not a distro. (2026-11-09) Repo `[zpt-cachy]`,
+  meta-packages `zpt-cachy-desktop`/`zpt-cachy-mac` (they replace the `zpt2linux-*` ones), GitHub repo
+  ztancrell/zpt-cachy. New signing key `zpt-cachy.asc` (ed25519, fingerprint
+  3A6F07D9D227FB888250B4A3AB192A45ADE20A55); the private key is the `GPG_PRIVATE_KEY` secret, backup
+  and revocation certificate outside the repo. (2026-11-09)
 - Upstream first: every patch or package carried here that isn't upstream gets submitted to the right
   upstream project; local patches are temporary until upstream takes them. (2026-11-09)
+
+Superseded (2026-11-09): the name zpt2linux. Dated entries above that say `zpt2linux`,
+`zpt2linux-desktop`, `zpt2linux-mac` or `zpt2linux.asc` (key 1DEAC296…A4F94116) describe the past; the
+current names and key are in the rename entry under Decided.
 
 Superseded (2026-11-09): the own-distro plan (archiso ISO, `linux-cachyos-t2` kernel, a
 `zpt2linux-config` dotfiles package). Current approach: the Idea above; configs live in the dotfiles

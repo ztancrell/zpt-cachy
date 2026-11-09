@@ -1,4 +1,4 @@
-# zpt2linux
+# zpt-cachy
 
 My own CachyOS setup (not a distro) for two machines, the desktop and a MacBookPro16,1: CachyOS
 as-is, plus this local pacman repo with my homestead X stack and T2 Mac packages, plus my configs, wallpapers, icons and themes in the
@@ -15,7 +15,7 @@ as-is, plus this local pacman repo with my homestead X stack and T2 Mac packages
   - `openbox-homestead`: Openbox (ztancrell/openbox-patchwork), `--enable-debug`. Replaces `openbox`.
   - `fastcompmgr-homestead`: compositor (ztancrell/fastcompmgr). Replaces `fastcompmgr`.
   - `tint2-homestead`: panel (ztancrell/tint2), no `tint2conf`. Replaces `tint2`.
-  - `zpt2linux-desktop`: meta-package depending on the five packages above.
+  - `zpt-cachy-desktop`: meta-package depending on the five packages above.
   - T2 support for the MacBookPro16,1, built from [KaiT2en-Fedora](https://github.com/kaiT2en/KaiT2en-Fedora)
     (pinned `_commit=`). Package names are upstream's own (KaiT2en ships RPM/Debian only; its TRADEMARK.md
     reserves the name "KAIT2EN" for its own distribution, so nothing here is called `kait2en-*`, and no
@@ -32,13 +32,13 @@ as-is, plus this local pacman repo with my homestead X stack and T2 Mac packages
       `t2-airshare`, `t2-drop`, `t2-debug`, `t2-power-explorer`.
   - `bankstown-lv2`: bass enhancer LV2 plugin ([chadmed/bankstown](https://github.com/chadmed/bankstown),
     tag 1.1.0 pinned), needed by `t2-dsp`.
-  - `zpt2linux-mac`: meta-package depending on all 31 T2 packages above (`bankstown-lv2` comes in via `t2-dsp`).
+  - `zpt-cachy-mac`: meta-package depending on all 31 T2 packages above (`bankstown-lv2` comes in via `t2-dsp`).
 - `build.sh`: builds every package in `pkgs/` (or only the `pkgs/<dir>/` arguments) with `makepkg -f`
   (never installs anything), copies the results into `repo/` and indexes them with `repo-add` into
-  `repo/zpt2linux.db.tar.zst`. `MAKEPKG_EXTRA` adds makepkg flags (CI uses `-s --noconfirm`).
+  `repo/zpt-cachy.db.tar.zst`. `MAKEPKG_EXTRA` adds makepkg flags (CI uses `-s --noconfirm`).
 - `repo/`: the built local repo (not committed).
 - `.github/workflows/repo.yml`: CI, see [CI](#ci).
-- `zpt2linux.asc`: the repo's public signing key.
+- `zpt-cachy.asc`: the repo's public signing key.
 
 The homestead packages build from the forks at the commits the `../homestead` submodules point at
 (`_commit=` in each PKGBUILD; the libinput driver comes from upstream, see above). To pick up new homestead work: bump `_commit` and `pkgver`, rerun `./build.sh`.
@@ -62,7 +62,7 @@ Not here: configs (they live in the dotfiles repo).
 
 If makepkg reports missing build dependencies, install them with `sudo pacman -S <deps>` and rerun.
 `t2-apps` and `bankstown-lv2` need pacman's Rust (`rustup` or `rust`); a rustup install only in
-`~/.cargo` does not satisfy makepkg. `build.sh` skips the dep check for `zpt2linux-*` and `*-dkms`
+`~/.cargo` does not satisfy makepkg. `build.sh` skips the dep check for `zpt-cachy-*` and `*-dkms`
 directories (their dependencies live only in this repo, or are runtime-only).
 
 ## CI
@@ -78,26 +78,26 @@ directories (their dependencies live only in this repo, or are runtime-only).
    (summary lists each one); any failure fails the run, which is what the weekly run is for;
 4. signs every package and the db with the repo key (private key in the `GPG_PRIVATE_KEY` secret);
 5. only if all of that passed: replaces the rolling release [`repo`](https://github.com/ztancrell/zpt-cachy/releases/tag/repo)
-   with the new packages, `.sig` files and `zpt2linux.db`/`.files` (+ `.sig`), so it always mirrors the
+   with the new packages, `.sig` files and `zpt-cachy.db`/`.files` (+ `.sig`), so it always mirrors the
    current repo.
 
-Results: <https://github.com/ztancrell/zpt-cachy/actions>. Signing key `zpt2linux.asc`, fingerprint
-`1DEAC2960F73252F7D1DA8CCACDEC7B1A4F94116`.
+Results: <https://github.com/ztancrell/zpt-cachy/actions>. Signing key `zpt-cachy.asc`, fingerprint
+`3A6F07D9D227FB888250B4A3AB192A45ADE20A55`.
 
 ## Install
 
 Once on each machine, trust the repo key:
 
 ```sh
-curl -sLO https://raw.githubusercontent.com/ztancrell/zpt-cachy/main/zpt2linux.asc
-sudo pacman-key --add zpt2linux.asc
-sudo pacman-key --lsign-key 1DEAC2960F73252F7D1DA8CCACDEC7B1A4F94116
+curl -sLO https://raw.githubusercontent.com/ztancrell/zpt-cachy/main/zpt-cachy.asc
+sudo pacman-key --add zpt-cachy.asc
+sudo pacman-key --lsign-key 3A6F07D9D227FB888250B4A3AB192A45ADE20A55
 ```
 
 Add to `/etc/pacman.conf`, after the CachyOS and Arch repos (default `SigLevel`, signatures required):
 
 ```ini
-[zpt2linux]
+[zpt-cachy]
 Server = https://github.com/ztancrell/zpt-cachy/releases/download/repo
 ```
 
@@ -107,9 +107,9 @@ To test unpushed changes, use the local build instead: `./build.sh`, and point t
 (unsigned, so `SigLevel = Optional TrustAll`):
 
 ```ini
-[zpt2linux]
+[zpt-cachy]
 SigLevel = Optional TrustAll
-Server = file:///home/zpt/projects/zpt2linux/repo
+Server = file:///home/zpt/projects/zpt-cachy/repo
 ```
 
 pacman downloads as the `alpm` user (`DownloadUser = alpm`), and `/home/zpt` is closed to
@@ -125,12 +125,15 @@ it is now only for testing local changes. The everyday source is the signed GitH
 Then, on the desktop:
 
 ```sh
-sudo pacman -Sy zpt2linux-desktop
+sudo pacman -Sy zpt-cachy-desktop
 ```
 
 (on the Mac, see [below](#on-the-mac-macbookpro161))
 
 pacman asks to remove the stock packages each one conflicts with; answer yes.
+Coming from the old name (`[zpt2linux]` repo, `zpt2linux-desktop`): rename the pacman.conf section to
+`[zpt-cachy]`; `sudo pacman -Syu` then offers to replace `zpt2linux-desktop` with `zpt-cachy-desktop`
+(answer yes).
 After installing, point ly at the packaged server (`x_cmd = /usr/bin/X` in `/etc/ly/config.ini`)
 and note that homestead's own `/usr/local` builds still come first in PATH (and openbox's autostart
 starts `/usr/local/bin/fastcompmgr` by full path) until they are removed or the paths are changed.
@@ -147,8 +150,8 @@ starts `/usr/local/bin/fastcompmgr` by full path) until they are removed or the 
    ```
 
    If `checkout` refuses because files already exist (fresh-install defaults), move those aside and rerun it.
-3. Follow [Install](#install): trust the key, add the `[zpt2linux]` repo, and
-   `sudo pacman -Sy zpt2linux-desktop`. (Clone this repo to `~/projects/zpt2linux` only to build locally.)
+3. Follow [Install](#install): trust the key, add the `[zpt-cachy]` repo, and
+   `sudo pacman -Sy zpt-cachy-desktop`. (Clone this repo to `~/projects/zpt-cachy` only to build locally.)
 4. Set `x_cmd = /usr/bin/X` in `/etc/ly/config.ini`.
 5. Turn the hourly dotfiles backup back on: `systemctl --user enable --now dotfiles-backup.timer`.
 
@@ -162,7 +165,7 @@ starts `/usr/local/bin/fastcompmgr` by full path) until they are removed or the 
 3. Install:
 
    ```sh
-   sudo pacman -Sy linux-cachyos-headers zpt2linux-mac
+   sudo pacman -Sy linux-cachyos-headers zpt-cachy-mac
    ```
 
    dkms builds the modules for every installed kernel with headers. CachyOS kernels are clang-built;

@@ -9,7 +9,7 @@ pkgname=('t2-fan-control' 't2-smc-control' 't2-zone-power' 't2-force-click' 't2-
          't2-airshare' 't2-drop' 't2-debug' 't2-power-explorer')
 _commit=8de95468f08c6db37924bcb8f9adc12c769add71
 pkgver=0.r904.g8de9546
-pkgrel=1
+pkgrel=2
 arch=('x86_64')
 url="https://github.com/kaiT2en/KaiT2en-Fedora"
 license=('GPL-3.0-or-later')
@@ -67,25 +67,25 @@ _gtkapp() {
 
 package_t2-fan-control() {
   pkgdesc="T2 Mac fan control daemon and GTK app (needs t2smc) (from KaiT2en)"
-  depends=('gtk4' 'glib2' 't2smc-dkms')
+  depends=('gtk4' 'libadwaita' 'glib2' 't2smc-dkms')
   _gtkapp t2-fan-control org.t2fancontrol.gtk t2-fancontrol-gtk t2-fancontrol.service
 }
 
 package_t2-smc-control() {
   pkgdesc="T2 SMC battery-gauging daemon and GTK app (needs t2smc) (from KaiT2en)"
-  depends=('gtk4' 'glib2' 't2smc-dkms')
+  depends=('gtk4' 'libadwaita' 'glib2' 't2smc-dkms')
   _gtkapp t2-smc-control org.t2smccontrol.gtk t2-smc-control t2-smc-gaugingd.service
 }
 
 package_t2-zone-power() {
   pkgdesc="T2 SMC zone power budget daemon and GTK app (needs t2smc) (from KaiT2en)"
-  depends=('gtk4' 'glib2' 't2smc-dkms')
+  depends=('gtk4' 'libadwaita' 'glib2' 't2smc-dkms')
   _gtkapp t2-zone-power org.t2zonepower.gtk t2-zonepower-gtk t2-zonepowerd.service
 }
 
 package_t2-force-click() {
   pkgdesc="T2 trackpad force-click daemon and GTK app (from KaiT2en)"
-  depends=('gtk4' 'glib2' 't2_precision_trackpad-dkms' 't2_trackpad_actuator-dkms')
+  depends=('gtk4' 'libadwaita' 'glib2' 't2_precision_trackpad-dkms' 't2_trackpad_actuator-dkms')
   _gtkapp t2-force-click org.t2forceclick.gtk t2-force-click t2-force-click.service
 }
 
@@ -186,7 +186,7 @@ package_t2-debug() {
 
 package_t2-power-explorer() {
   pkgdesc="GTK explorer for T2 Mac power states (from KaiT2en)"
-  depends=('gtk4' 'glib2' 'polkit' 'bash')
+  depends=('gtk4' 'libadwaita' 'glib2' 'polkit' 'bash')
   cd "$srcdir/kait2en/apps/t2-power-explorer"
   install -Dm755 "$srcdir/target/release/t2-power-explorer" -t "$pkgdir/usr/bin"
   install -Dm755 t2-power-explorer-status -t "$pkgdir/usr/libexec"

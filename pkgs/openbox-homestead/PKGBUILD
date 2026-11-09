@@ -2,7 +2,7 @@
 pkgname=openbox-homestead
 _commit=c91ce46d9255d2c188ab4fa11a0b20d1c9445cdc
 pkgver=3.6.0.r7671.gc91ce46
-pkgrel=1
+pkgrel=2
 pkgdesc="Openbox window manager (homestead fork, openbox-patchwork)"
 arch=('x86_64')
 url="https://github.com/ztancrell/openbox-patchwork"
@@ -10,7 +10,8 @@ license=('GPL-2.0-or-later')
 depends=('startup-notification' 'libxml2' 'libxinerama' 'libxrandr'
          'libxcursor' 'pango' 'imlib2' 'librsvg' 'libsm')
 makedepends=('git')
-optdepends=('python-pyxdg: for the openbox-xdg-autostart script')
+optdepends=('python: openbox-xdg-autostart'
+            'python-pyxdg: for the openbox-xdg-autostart script')
 provides=('openbox' 'libobrender.so')
 conflicts=('openbox')
 backup=('etc/xdg/openbox/menu.xml' 'etc/xdg/openbox/rc.xml'

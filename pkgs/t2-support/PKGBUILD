@@ -7,7 +7,7 @@ pkgbase=t2-support
 pkgname=('t2-dsp' 't2bce_audio-alsa-ucm-conf' 't2-services-common' 't2-power-tune' 't2-sidecar' 't2-blacklist')
 _commit=8de95468f08c6db37924bcb8f9adc12c769add71
 pkgver=0.r904.g8de9546
-pkgrel=1
+pkgrel=2
 arch=('any')
 url="https://github.com/kaiT2en/KaiT2en-Fedora"
 license=('GPL-3.0-or-later')
@@ -80,7 +80,7 @@ package_t2-power-tune() {
 
 package_t2-sidecar() {
   pkgdesc="Virtual GNOME (Mutter) display streamed to a tablet via the T2 encoder (from KaiT2en)"
-  depends=('bash' 'python' 'python-gobject' 'mutter' 't2bce_stack-dkms')
+  depends=('bash' 'python' 'python-gobject' 'glib2' 'mutter' 't2bce_stack-dkms')
   optdepends=('sunshine: streams the virtual display (t2-sidecar-sunshine.service)')
   cd kait2en/apps/t2-sidecar
   install -Dm755 t2-sidecar -t "$pkgdir/usr/bin"
