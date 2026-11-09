@@ -8,8 +8,9 @@ failed=
 for d in pkgs/*/; do
   n=$(basename "$d")
   echo "=== $n"
-  # Meta-packages depend on packages that live only in this repo, so skip their dep check.
-  case $n in zpt2linux-*) flags=-fd ;; *) flags=-f ;; esac
+  # Meta-packages depend on packages that live only in this repo, and DKMS packages build
+  # nothing but depend on dkms, so skip the dep check for both.
+  case $n in zpt2linux-*|*-dkms) flags=-fd ;; *) flags=-f ;; esac
   if (cd "$d" && makepkg $flags && for f in $(makepkg --packagelist); do [ -f "$f" ] && cp "$f" ../../repo/; done); then
     echo "=== $n: OK"
   else

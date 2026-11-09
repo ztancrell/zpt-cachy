@@ -1,0 +1,34 @@
+# Bankstown bass enhancer LV2 plugin, used by t2-dsp's speaker profiles (incl. MacBookPro16,1).
+# Build steps follow the AUR "bankstown" PKGBUILD, with the upstream tag pinned to its commit
+# and offline cargo builds.
+pkgname=bankstown-lv2
+pkgver=1.1.0
+_commit=e9829c9bccf5ed73768135c0ddd506f5a6690f9e  # tag 1.1.0
+pkgrel=1
+pkgdesc="Bankstown: barebones, fast LV2 bass enhancement plugin"
+arch=('x86_64')
+url="https://github.com/chadmed/bankstown"
+license=('MIT')
+depends=('gcc-libs' 'glibc')
+makedepends=('git' 'cargo')
+provides=('bankstown')
+conflicts=('bankstown')
+source=("bankstown::git+https://github.com/chadmed/bankstown.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+prepare() {
+  cd bankstown
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd bankstown
+  export RUSTUP_TOOLCHAIN=stable
+  cargo build --release --frozen
+}
+
+package() {
+  cd bankstown
+  make DESTDIR="$pkgdir" LIBDIR=/usr/lib install
+  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}
