@@ -27,7 +27,6 @@ A fresh install is CachyOS + dotfiles checkout + this repo (steps in README "Fre
 - Ask KaiT2en whether shipping their binaries/units that contain "kait2en" (`kait2en-touchbar`,
   `kait2en-t2-*.service`) in my repo is fine.
 - Should `zpt2linux-desktop` also depend on my everyday apps, so one install restores everything?
-- Where to host the repo publicly (GitHub releases, a static host)? For now: local (`file://`).
 
 ## Decided
 - Not a distro; my CachyOS setup. Packages here, configs/wallpapers in the dotfiles repo (bare repo,
@@ -44,6 +43,10 @@ A fresh install is CachyOS + dotfiles checkout + this repo (steps in README "Fre
 - The optional extras `t2-airshare`, `t2-sidecar`, `t2-drop`, `t2-debug`, `t2-power-explorer` are
   packaged and in `zpt2linux-mac`. (2026-11-09)
 - Keep the homestead desktop packages and local repo for the desktop. (2026-11-09)
+- Hosting and rebuilds: GitHub Actions builds, checks (namcap report, DKMS build against the latest
+  linux-cachyos-headers) and signs every package on push to main, weekly and by hand, and publishes
+  the signed repo as the rolling GitHub release `repo`. Signing key `zpt2linux.asc`. The local
+  `file://` repo stays for testing unpushed changes. (2026-11-09)
 - Name: zpt2linux. Layered on CachyOS. (2026-11-09)
 - Upstream first: every patch or package carried here that isn't upstream gets submitted to the right
   upstream project; local patches are temporary until upstream takes them. (2026-11-09)

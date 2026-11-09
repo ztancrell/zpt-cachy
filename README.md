@@ -33,9 +33,12 @@ as-is, plus this local pacman repo with my homestead X stack and T2 Mac packages
   - `bankstown-lv2`: bass enhancer LV2 plugin ([chadmed/bankstown](https://github.com/chadmed/bankstown),
     tag 1.1.0 pinned), needed by `t2-dsp`.
   - `zpt2linux-mac`: meta-package depending on all 31 T2 packages above (`bankstown-lv2` comes in via `t2-dsp`).
-- `build.sh`: builds every package in `pkgs/` with `makepkg -f` (never installs anything), copies the
-  results into `repo/` and indexes them with `repo-add` into `repo/zpt2linux.db.tar.zst`.
+- `build.sh`: builds every package in `pkgs/` (or only the `pkgs/<dir>/` arguments) with `makepkg -f`
+  (never installs anything), copies the results into `repo/` and indexes them with `repo-add` into
+  `repo/zpt2linux.db.tar.zst`. `MAKEPKG_EXTRA` adds makepkg flags (CI uses `-s --noconfirm`).
 - `repo/`: the built local repo (not committed).
+- `.github/workflows/repo.yml`: CI, see [CI](#ci).
+- `zpt2linux.asc`: the repo's public signing key.
 
 The homestead packages build from the forks at the commits the `../homestead` submodules point at
 (`_commit=` in each PKGBUILD; the libinput driver comes from upstream, see above). To pick up new homestead work: bump `_commit` and `pkgver`, rerun `./build.sh`.
@@ -62,9 +65,46 @@ If makepkg reports missing build dependencies, install them with `sudo pacman -S
 `~/.cargo` does not satisfy makepkg. `build.sh` skips the dep check for `zpt2linux-*` and `*-dkms`
 directories (their dependencies live only in this repo, or are runtime-only).
 
+## CI
+
+`.github/workflows/repo.yml` runs on every push to `main`, weekly (Monday 04:17 UTC) and by hand
+(Actions tab, "Run workflow", or `gh workflow run repo`). In a fresh `cachyos/cachyos-v3` container it:
+
+1. builds every package with `build.sh` (the X server first, installed, then the rest; build deps come
+   from the CachyOS/Arch repos via `makepkg -s`);
+2. runs `namcap` on every package: report only, in the run's summary page (namcap's errors include
+   false positives, so they don't fail the run);
+3. builds every DKMS module set with `dkms build` against the latest `linux-cachyos-headers`
+   (summary lists each one); any failure fails the run, which is what the weekly run is for;
+4. signs every package and the db with the repo key (private key in the `GPG_PRIVATE_KEY` secret);
+5. only if all of that passed: replaces the rolling release [`repo`](https://github.com/ztancrell/zpt2linux/releases/tag/repo)
+   with the new packages, `.sig` files and `zpt2linux.db`/`.files` (+ `.sig`), so it always mirrors the
+   current repo.
+
+Results: <https://github.com/ztancrell/zpt2linux/actions>. Signing key `zpt2linux.asc`, fingerprint
+`1DEAC2960F73252F7D1DA8CCACDEC7B1A4F94116`.
+
 ## Install
 
-Add to `/etc/pacman.conf`, after the CachyOS and Arch repos:
+Once on each machine, trust the repo key:
+
+```sh
+curl -sLO https://raw.githubusercontent.com/ztancrell/zpt2linux/main/zpt2linux.asc
+sudo pacman-key --add zpt2linux.asc
+sudo pacman-key --lsign-key 1DEAC2960F73252F7D1DA8CCACDEC7B1A4F94116
+```
+
+Add to `/etc/pacman.conf`, after the CachyOS and Arch repos (default `SigLevel`, signatures required):
+
+```ini
+[zpt2linux]
+Server = https://github.com/ztancrell/zpt2linux/releases/download/repo
+```
+
+(Needs the GitHub repo to be public; release downloads of a private repo 404.)
+
+To test unpushed changes, use the local build instead: `./build.sh`, and point the same section at it
+(unsigned, so `SigLevel = Optional TrustAll`):
 
 ```ini
 [zpt2linux]
@@ -73,11 +113,14 @@ Server = file:///home/zpt/projects/zpt2linux/repo
 ```
 
 pacman downloads as the `alpm` user (`DownloadUser = alpm`), and `/home/zpt` is closed to
-others, so give `alpm` traverse-only access once:
+others, so for the `file://` route give `alpm` traverse-only access once:
 
 ```sh
 sudo setfacl -m u:alpm:x /home/zpt
 ```
+
+Superseded (2026-11-09): the `file://` repo with `SigLevel = Optional TrustAll` as the everyday setup;
+it is now only for testing local changes. The everyday source is the signed GitHub release above.
 
 Then, on the desktop:
 
@@ -104,8 +147,8 @@ starts `/usr/local/bin/fastcompmgr` by full path) until they are removed or the 
    ```
 
    If `checkout` refuses because files already exist (fresh-install defaults), move those aside and rerun it.
-3. Clone this repo to `~/projects/zpt2linux`, run `./build.sh`, then follow [Install](#install):
-   add the `[zpt2linux]` repo, the `setfacl` step, and `sudo pacman -Sy zpt2linux-desktop`.
+3. Follow [Install](#install): trust the key, add the `[zpt2linux]` repo, and
+   `sudo pacman -Sy zpt2linux-desktop`. (Clone this repo to `~/projects/zpt2linux` only to build locally.)
 4. Set `x_cmd = /usr/bin/X` in `/etc/ly/config.ini`.
 5. Turn the hourly dotfiles backup back on: `systemctl --user enable --now dotfiles-backup.timer`.
 

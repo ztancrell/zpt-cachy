@@ -1,0 +1,79 @@
+# Build every package in a clean CachyOS (x86-64-v3) container, check it, sign it, and publish
+# the signed pacman repo as the assets of the rolling release "repo". See README "CI".
+name: repo
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 4 * * 1'  # weekly: catches new CachyOS kernels breaking the DKMS modules
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: repo
+defaults:
+  run:
+    shell: bash
+env:
+  KEY: 1DEAC2960F73252F7D1DA8CCACDEC7B1A4F94116  # zpt2linux.asc
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    container: cachyos/cachyos-v3:latest
+    steps:
+      - name: Set up container
+        run: |
+          pacman -Syu --noconfirm --needed base-devel git namcap dkms linux-cachyos-headers clang llvm lld github-cli
+          useradd -m builder
+          echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          chown -R builder .
+          b() { sudo -H -u builder env MAKEPKG_EXTRA="-s --noconfirm" ./build.sh "$@"; }
+          # The libinput driver builds against the X server: build and install that first.
+          b pkgs/xlibre-xserver-homestead/
+          pacman -U --noconfirm repo/xlibre-xserver-homestead-*.pkg.tar.zst
+          b $(ls -d pkgs/*/ | grep -v xlibre-xserver-homestead)
+      - name: namcap (report only)
+        run: |
+          for f in repo/*.pkg.tar.zst; do namcap "$f"; done | tee namcap.txt
+          { echo "## namcap: $(grep -c ' E: ' namcap.txt) errors, $(grep -c ' W: ' namcap.txt) warnings"
+            echo '```'; cat namcap.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: DKMS modules against the latest linux-cachyos-headers
+        run: |
+          kv=$(ls /usr/lib/modules)
+          echo "## DKMS against $kv" >> "$GITHUB_STEP_SUMMARY"
+          failed=
+          for p in repo/*-dkms-*.pkg.tar.zst; do
+            s=$(bsdtar -tf "$p" | sed -n 's|^usr/src/\([^/]*\)/dkms.conf$|\1|p')
+            bsdtar -xf "$p" -C / usr/src
+            if dkms build "${s%-*}/${s##*-}" -k "$kv"; then r=OK; else
+              r=FAILED; failed="$failed $s"
+              tail -40 /var/lib/dkms/${s%-*}/${s##*-}/build/make.log
+            fi
+            echo "- $s: $r" >> "$GITHUB_STEP_SUMMARY"
+          done
+          [ -z "$failed" ] || { echo "DKMS failed:$failed"; exit 1; }
+      - name: Sign packages and db
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          export GNUPGHOME=$(mktemp -d)
+          gpg --batch --import <<< "$GPG_PRIVATE_KEY"
+          cd repo
+          for f in *.pkg.tar.zst; do gpg --batch -u "$KEY" --detach-sign "$f"; done
+          rm -f zpt2linux.*
+          repo-add --sign --verify --key "$KEY" zpt2linux.db.tar.zst *.pkg.tar.zst
+      - name: Publish rolling release "repo"
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir dist && cp -L repo/* dist/  # real files: pacman fetches zpt2linux.db, not the symlink target
+          gh release delete repo -R "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+          gh release create repo dist/* -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "zpt2linux pacman repo" \
+            --notes "Signed pacman repo built from $GITHUB_SHA. Server = https://github.com/$GITHUB_REPOSITORY/releases/download/repo"
+          # GitHub rewrites some characters in asset names; any rename would break pacman downloads.
+          diff <(ls dist | sort) <(gh release view repo -R "$GITHUB_REPOSITORY" --json assets -q '.assets[].name' | sort)
