@@ -21,6 +21,11 @@ the Mac, my homestead X11 stack on both. Personal use first.
   encoder that this distro would ship. Fixes may be carried as patches here until upstream takes them.
 - `../macbook/mbp16-power`: SMC power-budget research (zone-power behaviour on the 16,1).
 
+## Status
+- 2026-11-09: step 1 passed on the desktop. `zpt2linux-desktop` installed from the local repo; after a
+  reboot ly's "Openbox Patchwork" session runs X, openbox, tint2 and fastcompmgr all from the packages.
+- Next: KaiT2en packages.
+
 ## Open questions
 - Which T2 patch source for the kernel: KaiT2en's set, t2linux's `linux-t2-patches`, or both? Do
   they apply cleanly on top of linux-cachyos's own patches?
