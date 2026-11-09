@@ -77,11 +77,11 @@ directories (their dependencies live only in this repo, or are runtime-only).
 3. builds every DKMS module set with `dkms build` against the latest `linux-cachyos-headers`
    (summary lists each one); any failure fails the run, which is what the weekly run is for;
 4. signs every package and the db with the repo key (private key in the `GPG_PRIVATE_KEY` secret);
-5. only if all of that passed: replaces the rolling release [`repo`](https://github.com/ztancrell/zpt2linux/releases/tag/repo)
+5. only if all of that passed: replaces the rolling release [`repo`](https://github.com/ztancrell/zpt-cachy/releases/tag/repo)
    with the new packages, `.sig` files and `zpt2linux.db`/`.files` (+ `.sig`), so it always mirrors the
    current repo.
 
-Results: <https://github.com/ztancrell/zpt2linux/actions>. Signing key `zpt2linux.asc`, fingerprint
+Results: <https://github.com/ztancrell/zpt-cachy/actions>. Signing key `zpt2linux.asc`, fingerprint
 `1DEAC2960F73252F7D1DA8CCACDEC7B1A4F94116`.
 
 ## Install
@@ -89,7 +89,7 @@ Results: <https://github.com/ztancrell/zpt2linux/actions>. Signing key `zpt2linu
 Once on each machine, trust the repo key:
 
 ```sh
-curl -sLO https://raw.githubusercontent.com/ztancrell/zpt2linux/main/zpt2linux.asc
+curl -sLO https://raw.githubusercontent.com/ztancrell/zpt-cachy/main/zpt2linux.asc
 sudo pacman-key --add zpt2linux.asc
 sudo pacman-key --lsign-key 1DEAC2960F73252F7D1DA8CCACDEC7B1A4F94116
 ```
@@ -98,7 +98,7 @@ Add to `/etc/pacman.conf`, after the CachyOS and Arch repos (default `SigLevel`,
 
 ```ini
 [zpt2linux]
-Server = https://github.com/ztancrell/zpt2linux/releases/download/repo
+Server = https://github.com/ztancrell/zpt-cachy/releases/download/repo
 ```
 
 (Needs the GitHub repo to be public; release downloads of a private repo 404.)
