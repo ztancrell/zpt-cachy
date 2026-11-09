@@ -42,6 +42,13 @@ SigLevel = Optional TrustAll
 Server = file:///home/zpt/projects/zpt2linux/repo
 ```
 
+pacman downloads as the `alpm` user (`DownloadUser = alpm`), and `/home/zpt` is closed to
+others, so give `alpm` traverse-only access once:
+
+```sh
+sudo setfacl -m u:alpm:x /home/zpt
+```
+
 Then:
 
 ```sh
