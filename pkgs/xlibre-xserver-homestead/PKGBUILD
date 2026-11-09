@@ -1,0 +1,55 @@
+# Based on the AUR xlibre-xserver PKGBUILD; built from homestead's fork, options as homestead builds it.
+# One package (server + common + devel) instead of the AUR split; Xephyr/Xvfb/Xnest are not built.
+pkgname=xlibre-xserver-homestead
+_commit=b92b2c5dbc0ed438a697dcc9c881eeb299f14ecd
+pkgver=25.2.0.r24070.gb92b2c5
+pkgrel=1
+pkgdesc="XLibre X server (homestead fork), incl. common files and SDK"
+arch=('x86_64')
+url="https://github.com/ztancrell/xserver"
+license=('MIT' 'X11' 'BSD-3-Clause' 'HPND' 'HPND-sell-variant' 'ISC' 'SGI-B-2.0')
+depends=('dbus' 'glibc' 'libbsd' 'libdrm' 'libepoxy' 'libgl' 'libpciaccess' 'libtirpc'
+         'libxau' 'libxcvt' 'libxdmcp' 'libxfont2' 'libxshmfence' 'nettle' 'pixman'
+         'sh' 'systemd-libs' 'xkeyboard-config' 'xorg-setxkbmap' 'xorg-xkbcomp'
+         'mesa' 'xorg-util-macros' 'xorgproto')
+makedepends=('git' 'meson' 'libx11' 'libxkbfile' 'libxres' 'mesa' 'systemd'
+             'xorg-font-util' 'xtrans')
+provides=('xlibre-xserver' 'xlibre-xserver-common' 'xlibre-xserver-devel'
+          'xorg-server' 'xorg-server-common' 'xorg-server-devel' 'x-server'
+          'X-ABI-EXTENSION_VERSION=11.0' 'X-ABI-VIDEODRV_VERSION=28.0' 'X-ABI-XINPUT_VERSION=26.0')
+conflicts=('xlibre-xserver' 'xlibre-xserver-common' 'xlibre-xserver-devel'
+           'xorg-server' 'xorg-server-common' 'xorg-server-devel'
+           'glamor-egl' 'xf86-video-modesetting' 'nvidia-utils<=331.20')
+source=("git+https://github.com/ztancrell/xserver.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd xserver
+  printf "%s.r%s.g%s" "25.2.0" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+build() {
+  # Modules fail to load with undefined symbols under -fno-plt / -z now (FS#55102).
+  export CFLAGS=${CFLAGS/-fno-plt}
+  export CXXFLAGS=${CXXFLAGS/-fno-plt}
+  export LDFLAGS=${LDFLAGS/-Wl,-z,now}
+
+  arch-meson xserver build \
+    -D xorg=true \
+    -D glamor=true \
+    -D udev=true \
+    -D systemd_logind=true \
+    -D seatd_libseat=false \
+    -D suid_wrapper=false \
+    -D legacy_nvidia_padding=false \
+    -D xkb_dir=/usr/share/X11/xkb \
+    -D xkb_output_dir=/var/lib/xkb \
+    -D tests=false
+  meson compile -C build
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir"
+  rm -f "$pkgdir"/etc/X11/xorg.conf.d/*.debian
+  install -Dm644 xserver/COPYING -t "$pkgdir/usr/share/licenses/$pkgname"
+}

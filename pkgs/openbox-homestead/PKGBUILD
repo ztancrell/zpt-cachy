@@ -1,0 +1,45 @@
+# Based on Arch's openbox PKGBUILD; built from homestead's fork (openbox-patchwork), --enable-debug as homestead builds it.
+pkgname=openbox-homestead
+_commit=c91ce46d9255d2c188ab4fa11a0b20d1c9445cdc
+pkgver=3.6.0.r7671.gc91ce46
+pkgrel=1
+pkgdesc="Openbox window manager (homestead fork, openbox-patchwork)"
+arch=('x86_64')
+url="https://github.com/ztancrell/openbox-patchwork"
+license=('GPL-2.0-or-later')
+depends=('startup-notification' 'libxml2' 'libxinerama' 'libxrandr'
+         'libxcursor' 'pango' 'imlib2' 'librsvg' 'libsm')
+makedepends=('git')
+optdepends=('python-pyxdg: for the openbox-xdg-autostart script')
+provides=('openbox' 'libobrender.so')
+conflicts=('openbox')
+backup=('etc/xdg/openbox/menu.xml' 'etc/xdg/openbox/rc.xml'
+        'etc/xdg/openbox/autostart' 'etc/xdg/openbox/environment')
+source=("openbox::git+https://github.com/ztancrell/openbox-patchwork.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd openbox
+  printf "%s.r%s.g%s" "3.6.0" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+prepare() {
+  cd openbox
+  ./bootstrap
+}
+
+build() {
+  cd openbox
+  ./configure --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib/openbox \
+    --with-x --enable-startup-notification --enable-debug
+  make
+}
+
+package() {
+  cd openbox
+  make DESTDIR="$pkgdir" install
+  rm -rf "$pkgdir"/usr/bin/{gdm-control,openbox-{gnome,kde}-session} \
+    "$pkgdir"/usr/share/gnome{,-session} \
+    "$pkgdir"/usr/share/man/man1/openbox-{gnome,kde}-session.1 \
+    "$pkgdir"/usr/share/xsessions/openbox-{gnome,kde}.desktop
+}

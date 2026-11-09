@@ -36,3 +36,4 @@ the Mac, my homestead X11 stack on both. Personal use first.
   machines get the setup, not just the software. (2026-11-09)
 - Build order: homestead packages + local repo + `zpt2linux-desktop`, proven on the desktop;
   then KaiT2en packages; then `linux-cachyos-t2`. Repo is local (`file://`) for now. (2026-11-09)
+- Upstream first: every patch or package carried here that isn't upstream gets submitted to the right upstream project; local patches are temporary until upstream takes them. (2026-11-09)

@@ -1,0 +1,22 @@
+#!/bin/sh
+# Build every package in pkgs/ and index it into repo/zpt2linux.db. Installs nothing:
+# missing build deps make makepkg fail and are listed in the summary for you to install.
+cd "$(dirname "$0")" || exit 1
+export PATH=/usr/bin:$PATH  # a non-zstd "zstd" in ~/.local/bin breaks package compression
+mkdir -p repo
+failed=
+for d in pkgs/*/; do
+  n=$(basename "$d")
+  echo "=== $n"
+  # The meta-package depends on packages that live only in this repo, so skip its dep check.
+  flags=-f; [ "$n" = zpt2linux-desktop ] && flags=-fd
+  if (cd "$d" && makepkg $flags && for f in $(makepkg --packagelist); do [ -f "$f" ] && cp "$f" ../../repo/; done); then
+    echo "=== $n: OK"
+  else
+    echo "=== $n: FAILED"; failed="$failed $n"
+  fi
+done
+repo-add -n -R repo/zpt2linux.db.tar.zst repo/*.pkg.tar.zst
+echo "SUMMARY: failed:${failed:- none}"
+ls repo/*.pkg.tar.zst
+[ -z "$failed" ]

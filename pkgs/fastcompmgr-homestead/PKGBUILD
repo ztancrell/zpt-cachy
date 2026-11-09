@@ -1,0 +1,29 @@
+# Based on the AUR fastcompmgr PKGBUILD; built from homestead's fork.
+pkgname=fastcompmgr-homestead
+_commit=5a86f80663f4d8fb6eec6576faccafb580c4d2a4
+pkgver=r161.g5a86f80
+pkgrel=1
+pkgdesc="Compton-based X11 compositor focused on performance (homestead fork)"
+arch=('x86_64')
+url="https://github.com/ztancrell/fastcompmgr"
+license=('MIT')
+depends=('glibc' 'libx11' 'libxcomposite' 'libxdamage' 'libxfixes' 'libxrender')
+makedepends=('git')
+provides=('fastcompmgr')
+conflicts=('fastcompmgr')
+source=("git+https://github.com/ztancrell/fastcompmgr.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd fastcompmgr
+  printf "r%s.g%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+build() {
+  make -C fastcompmgr PREFIX=/usr
+}
+
+package() {
+  make -C fastcompmgr PREFIX=/usr DESTDIR="$pkgdir" install
+  install -Dm644 fastcompmgr/LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}

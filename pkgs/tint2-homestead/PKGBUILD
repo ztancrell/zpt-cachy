@@ -1,0 +1,38 @@
+# Based on Arch's tint2 PKGBUILD; built from homestead's fork, cmake flags as homestead builds it (no tint2conf).
+pkgname=tint2-homestead
+_commit=3b2cce80762f7a54775f2843c3ed9591f82db3a5
+pkgver=17.0.2.r12.g3b2cce8
+pkgrel=1
+pkgdesc="Panel/taskbar for X11 window managers (homestead fork)"
+arch=('x86_64')
+url="https://github.com/ztancrell/tint2"
+license=('GPL-2.0-only')
+depends=('gtk3' 'imlib2' 'startup-notification')
+makedepends=('cmake' 'git')
+provides=('tint2')
+conflicts=('tint2')
+source=("git+https://github.com/ztancrell/tint2.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd tint2
+  git describe --long --tags --abbrev=7 | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+  # Format-string bug, fatal under makepkg's -Werror=format-security.
+  sed -i 's/sizeof(execp->backend->name), value);/sizeof(execp->backend->name), "%s", value);/' tint2/src/config.c
+}
+
+build() {
+  cmake -B build -S tint2 \
+    -D CMAKE_INSTALL_PREFIX=/usr \
+    -D CMAKE_BUILD_TYPE=RelWithDebInfo \
+    -D CMAKE_POLICY_VERSION_MINIMUM=3.5 \
+    -D ENABLE_TINT2CONF=OFF
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

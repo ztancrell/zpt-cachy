@@ -1,0 +1,9 @@
+pkgname=zpt2linux-desktop
+pkgver=1
+pkgrel=1
+pkgdesc="zpt2linux desktop: the homestead X11 stack"
+arch=('any')
+url="https://github.com/ztancrell/zpt2linux"
+license=('MIT')
+depends=('xlibre-xserver-homestead' 'xlibre-input-libinput-homestead'
+         'openbox-homestead' 'fastcompmgr-homestead' 'tint2-homestead')
