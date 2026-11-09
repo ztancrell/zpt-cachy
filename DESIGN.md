@@ -2,7 +2,8 @@
 
 > **Superseded (2026-11-09):** the own-distro plan is dropped (too many distros already). Effort moves to
 > helping KaiT2en make T2 better on Linux upstream: see `../macbook/t2-decomp` (`deliverables/issues/kait2en-*.md`).
-> This repo stays as a record; the homestead packages it built remain installed on the desktop.
+> Kept: this repo as the local pacman repo for the homestead desktop packages (`zpt2linux-desktop`),
+> which stay installed on the desktop. The T2/Mac parts are not pursued here.
 
 ## Idea
 My own Arch-based Linux distro for my two machines: the 2019 MacBook Pro 16" (MacBookPro16,1,
@@ -49,6 +50,7 @@ the Mac, my homestead X11 stack on both. Personal use first.
 
 ## Decided
 - Drop the distro; contribute to KaiT2en instead. (2026-11-09)
+- Keep the homestead desktop packages and local repo for the desktop. (2026-11-09)
 - Name: zpt2linux. Layered on CachyOS, ISO + package repo, for Mac + desktop. (2026-11-09)
 - Repo first, ISO last. Mac install = existing T2-capable ISO + CachyOS + this repo +
   `pacman -S zpt2linux-mac`. Own archiso profile only if reinstalls become frequent. (2026-11-09)
