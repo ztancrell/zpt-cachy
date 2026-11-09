@@ -1,0 +1,57 @@
+# T2 kernel modules from KaiT2en-Fedora as DKMS packages, split as upstream's
+# scripts/fedora/install-dkms-modules.sh registers them with DKMS (one package per dkms.conf).
+# Upstream's dkms.conf files are used unchanged; Arch's dkms pacman hook builds them on install.
+# Not packaged: t2sep (upstream retired it, AUTOINSTALL="no"), linux-apfs-rw (third-party copy;
+# AUR linux-apfs-rw-dkms covers it).
+pkgbase=t2-dkms
+pkgname=('t2bce_stack-dkms' 't2smc-dkms' 't2bdrm-dkms' 't2touchbar-dkms' 'hid_t2magicmouse-dkms'
+         't2_precision_trackpad-dkms' 't2_trackpad_actuator-dkms' 't2mfi_fastcharge-dkms'
+         't2gmux-dkms' 't2thunderbolt-dkms' 't2smp-dkms' 't2sbs-dkms')
+_commit=8de95468f08c6db37924bcb8f9adc12c769add71
+pkgver=0.r904.g8de9546
+pkgrel=1
+arch=('any')
+url="https://github.com/kaiT2en/KaiT2en-Fedora"
+license=('GPL-2.0-only')
+depends=('dkms')
+makedepends=('git')
+source=("kait2en::git+https://github.com/kaiT2en/KaiT2en-Fedora.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd kait2en
+  printf "0.r%s.g%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+# Copy modules/<name> to /usr/src/<name>-<PACKAGE_VERSION from its dkms.conf>.
+_dkms() {
+  local name=${pkgname%-dkms} src=kait2en/modules/${pkgname%-dkms} ver dst
+  ver=$(sed -n 's/^PACKAGE_VERSION="\([^"]*\)".*/\1/p' "$src/dkms.conf")
+  dst="$pkgdir/usr/src/$name-$ver"
+  install -d "$dst"
+  cp -r "$src"/. "$dst"/
+  if [ "$name" = t2bce_stack ]; then
+    # As upstream's installer: stage the stack members below the stack directory.
+    local c
+    for c in t2bce_dma t2bce_core t2bce_vhci t2bce_audio; do cp -r kait2en/modules/$c "$dst"/; done
+    for c in t2bce_ave t2bce_sidecar; do cp -r kait2en/t2-services/t2-ave/kernel/$c "$dst"/; done
+  fi
+  rm -rf "$dst"/tests "$dst"/*/tests
+  install -Dm644 kait2en/LICENSING.md -t "$pkgdir/usr/share/licenses/$pkgname"
+}
+
+package_t2bce_stack-dkms() {
+  pkgdesc="T2 BCE driver stack (DMA, core, VHCI/USB, audio, AVE, Sidecar) (DKMS, from KaiT2en)"
+  _dkms
+}
+package_t2smc-dkms() { pkgdesc="T2 SMC driver: fans, battery limit, hwmon, RTC; replaces applesmc (DKMS, from KaiT2en)"; _dkms; }
+package_t2bdrm-dkms() { pkgdesc="T2 Touch Bar DRM driver; replaces appletbdrm (DKMS, from KaiT2en)"; _dkms; }
+package_t2touchbar-dkms() { pkgdesc="T2 Touch Bar HID, backlight and keyboard-mode drivers (DKMS, from KaiT2en)"; _dkms; }
+package_hid_t2magicmouse-dkms() { pkgdesc="Magic Mouse / Magic Trackpad HID driver; replaces hid_magicmouse (DKMS, from KaiT2en)"; _dkms; }
+package_t2_precision_trackpad-dkms() { pkgdesc="T2 built-in trackpad driver (DKMS, from KaiT2en)"; _dkms; }
+package_t2_trackpad_actuator-dkms() { pkgdesc="T2 trackpad haptic actuator driver (DKMS, from KaiT2en)"; _dkms; }
+package_t2mfi_fastcharge-dkms() { pkgdesc="Apple MFi device fast-charge control; replaces apple_mfi_fastcharge (DKMS, from KaiT2en)"; _dkms; }
+package_t2gmux-dkms() { pkgdesc="GMUX driver for dual-GPU T2 Macs; replaces apple_gmux (DKMS, from KaiT2en)"; _dkms; }
+package_t2thunderbolt-dkms() { pkgdesc="Thunderbolt NHI/port PM ordering quirk for T2 Macs (DKMS, from KaiT2en)"; _dkms; }
+package_t2smp-dkms() { pkgdesc="CPU resume ordering quirk for T2 Macs (DKMS, from KaiT2en)"; _dkms; }
+package_t2sbs-dkms() { pkgdesc="ACPI Smart Battery driver with T2 fixes; replaces sbs (DKMS, from KaiT2en)"; _dkms; }

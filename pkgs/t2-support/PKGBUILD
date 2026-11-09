@@ -1,0 +1,79 @@
+# KaiT2en-Fedora's non-compiled T2 support: speaker DSP, BCE audio UCM profiles, the shared
+# t2-services runtime and the t2-power-tune GUI. Package names and contents follow upstream's
+# RPM specs (dsp/packaging, t2-services/shared/packaging) and Fedora install scripts, with
+# /usr instead of /usr/local. Upstream's RPM scriptlets only migrate installs made by its old
+# installer script, so they are not carried; services are left for the user to enable.
+pkgbase=t2-support
+pkgname=('t2-dsp' 't2bce_audio-alsa-ucm-conf' 't2-services-common' 't2-power-tune')
+_commit=8de95468f08c6db37924bcb8f9adc12c769add71
+pkgver=0.r904.g8de9546
+pkgrel=1
+arch=('any')
+url="https://github.com/kaiT2en/KaiT2en-Fedora"
+license=('GPL-3.0-or-later')
+makedepends=('git' 'python')
+source=("kait2en::git+https://github.com/kaiT2en/KaiT2en-Fedora.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd kait2en
+  printf "0.r%s.g%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+prepare() {
+  cd kait2en/apps/t2-power-tune
+  sed -i 's|/usr/local|/usr|g' t2-power-tune.py t2-power-tune-helper t2-power-tune-status \
+    org.t2powertune.policy org.t2powertune.gtk.desktop
+}
+
+build() {
+  make -C kait2en/dsp build DATADIR=/usr/share
+}
+
+check() {
+  make -C kait2en/dsp test
+}
+
+_licenses() {
+  install -Dm644 kait2en/LICENSE kait2en/LICENSING.md kait2en/AUTHORS -t "$pkgdir/usr/share/licenses/$pkgname"
+}
+
+package_t2-dsp() {
+  pkgdesc="Speaker DSP profiles for T2 Macs (PipeWire filter-chain + WirePlumber, from KaiT2en)"
+  depends=('pipewire' 'pipewire-pulse' 'wireplumber' 'lsp-plugins-lv2' 'bash' 'python')
+  # ponytail: bankstown-lv2 is AUR-only but the MacBookPro16,1 profile uses it; make it a hard dep once it is in this repo.
+  optdepends=('bankstown-lv2: bass enhancer used by most profiles, including MacBookPro16,1 (AUR)')
+  make -C kait2en/dsp install PREFIX=/usr DESTDIR="$pkgdir"
+}
+
+package_t2bce_audio-alsa-ucm-conf() {
+  pkgdesc="ALSA UCM profiles for the T2 BCE audio driver (from KaiT2en)"
+  depends=('alsa-ucm-conf')
+  local src=kait2en/modules/t2bce_audio-alsa-ucm-conf/ucm2 d
+  install -Dm644 "$src"/AppleT2/HiFi-x{2,4,6}.conf -t "$pkgdir/usr/share/alsa/ucm2/AppleT2"
+  for d in AppleT2x2 AppleT2x4 AppleT2x6; do
+    install -Dm644 "$src/conf.d/$d/$d.conf" -t "$pkgdir/usr/share/alsa/ucm2/conf.d/$d"
+  done
+  _licenses
+}
+
+package_t2-services-common() {
+  pkgdesc="Shared runtime for the T2 services: NCM sleep hook, suspend unit, udev and NetworkManager config (from KaiT2en)"
+  depends=('networkmanager' 'systemd' 'iproute2' 'iputils' 'coreutils' 'bash' 'python')
+  make -C kait2en/t2-services/shared install PREFIX=/usr DESTDIR="$pkgdir" \
+    SYSTEMD_UNIT_DIR=/usr/lib/systemd/system LIBEXECDIR=/usr/libexec UDEV_RULES_DIR=/usr/lib/udev/rules.d
+  _licenses
+}
+
+package_t2-power-tune() {
+  pkgdesc="GTK tool for T2 Mac PCIe/CPU power tuning (from KaiT2en)"
+  depends=('python' 'python-gobject' 'gtk4' 'libadwaita' 'pciutils' 'polkit')
+  cd kait2en/apps/t2-power-tune
+  install -Dm755 t2-power-tune.py "$pkgdir/usr/bin/t2-power-tune"
+  install -Dm755 t2-power-tune-helper t2-power-tune-status -t "$pkgdir/usr/libexec"
+  install -Dm644 org.t2powertune.policy -t "$pkgdir/usr/share/polkit-1/actions"
+  install -Dm644 org.t2powertune.gtk.desktop -t "$pkgdir/usr/share/applications"
+  install -Dm644 org.t2powertune.gtk.svg -t "$pkgdir/usr/share/icons/hicolor/scalable/apps"
+  cd "$srcdir"
+  _licenses
+}

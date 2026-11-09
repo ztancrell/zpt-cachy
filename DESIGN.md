@@ -24,14 +24,24 @@ the Mac, my homestead X11 stack on both. Personal use first.
 ## Status
 - 2026-11-09: step 1 passed on the desktop. `zpt2linux-desktop` installed from the local repo; after a
   reboot ly's "Openbox Patchwork" session runs X, openbox, tint2 and fastcompmgr all from the packages.
-- Next: KaiT2en packages.
+- 2026-11-09: KaiT2en packages written (`pkgs/t2-dkms`, `t2-support`, `t2-apps`, meta `zpt2linux-mac`).
+  DKMS and support packages build and are in the repo; all 12 DKMS units compile against the desktop's
+  linux-cachyos headers (LLVM=1). `t2-apps` waits on pacman's `rust`. No hardware test yet.
+- Next: build `t2-apps`, test on the Mac; then `linux-cachyos-t2`.
 
 ## Open questions
 - Which T2 patch source for the kernel: KaiT2en's set, t2linux's `linux-t2-patches`, or both? Do
   they apply cleanly on top of linux-cachyos's own patches?
 - Where to host the repo publicly (GitHub releases, a static host)? For now: local.
 - Rebuild automation: CachyOS ships kernels often; script/CI to rebuild + smoke-test.
-- Licensing/naming: KaiT2en is MIT with a TRADEMARK.md; check what redistribution requires.
+- Licensing/naming: checked 2026-11-09. KaiT2en is not MIT any more: modules GPL-2.0, userspace
+  GPL-3.0-or-later with a 7(b) attribution term (LICENSE, LICENSING.md, AUTHORS ship in each package).
+  TRADEMARK.md: a distribution may not use the name "KAIT2EN" without permission, so packages keep
+  upstream's `t2-*` names. Open: ask upstream whether shipping their binaries/units that contain
+  "kait2en" (`kait2en-touchbar`, `kait2en-t2-*.service`) in a third-party repo is fine.
+- Kernel blacklist/cmdline for the T2 modules: ship as a package (modprobe.d + bootloader snippet) or
+  keep it a manual step?
+- `bankstown-lv2` (AUR) is needed by the 16,1 DSP profile: package it here?
 
 ## Decided
 - Name: zpt2linux. Layered on CachyOS, ISO + package repo, for Mac + desktop. (2026-11-09)
