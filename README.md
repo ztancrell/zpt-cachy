@@ -70,14 +70,19 @@ directories (their dependencies live only in this repo, or are runtime-only).
 `.github/workflows/repo.yml` runs on every push to `main`, weekly (Monday 04:17 UTC) and by hand
 (Actions tab, "Run workflow", or `gh workflow run repo`). In a fresh `cachyos/cachyos-v3` container it:
 
-1. builds every package with `build.sh` (the X server first, installed, then the rest; build deps come
+1. forces portable flags in the container's makepkg config (`-march=x86-64-v3 -mtune=generic`,
+   `RUSTFLAGS` `-C target-cpu=x86-64-v3`) instead of `-march=native`, which would target the runner's
+   AVX-512 CPU; the log prints the resulting flag lines;
+2. builds every package with `build.sh` (the X server first, installed, then the rest; build deps come
    from the CachyOS/Arch repos via `makepkg -s`);
-2. runs `namcap` on every package: report only, in the run's summary page (namcap's errors include
+3. fails the run if any ELF file in any package contains AVX-512 (`%zmm`) instructions (`objdump -d`;
+   the summary lists package and file): neither target machine has AVX-512;
+4. runs `namcap` on every package: report only, in the run's summary page (namcap's errors include
    false positives, so they don't fail the run);
-3. builds every DKMS module set with `dkms build` against the latest `linux-cachyos-headers`
+5. builds every DKMS module set with `dkms build` against the latest `linux-cachyos-headers`
    (summary lists each one); any failure fails the run, which is what the weekly run is for;
-4. signs every package and the db with the repo key (private key in the `GPG_PRIVATE_KEY` secret);
-5. only if all of that passed: replaces the rolling release [`repo`](https://github.com/ztancrell/zpt-cachy/releases/tag/repo)
+6. signs every package and the db with the repo key (private key in the `GPG_PRIVATE_KEY` secret);
+7. only if all of that passed: replaces the rolling release [`repo`](https://github.com/ztancrell/zpt-cachy/releases/tag/repo)
    with the new packages, `.sig` files and `zpt-cachy.db`/`.files` (+ `.sig`), so it always mirrors the
    current repo.
 
@@ -137,6 +142,8 @@ Coming from the old name (`[zpt2linux]` repo, `zpt2linux-desktop`): rename the p
 After installing, point ly at the packaged server (`x_cmd = /usr/bin/X` in `/etc/ly/config.ini`)
 and note that homestead's own `/usr/local` builds still come first in PATH (and openbox's autostart
 starts `/usr/local/bin/fastcompmgr` by full path) until they are removed or the paths are changed.
+Once the `/usr/local` builds are removed, also drop `/usr/local/share/xsessions` from `xsessions` in
+`/etc/ly/config.ini` (ly otherwise logs "failed to crawl x11 session directory").
 
 ## Fresh install
 

@@ -14,7 +14,13 @@ Intel T2, i9-9880H + Radeon Pro 5500M). Three parts:
 A fresh install is CachyOS + dotfiles checkout + this repo (steps in README "Fresh install").
 
 ## Status
-- 2026-11-09: desktop packages installed and working. `zpt2linux-desktop` from the local repo; ly's
+- 2026-11-11: the CI-built packages (release `repo`) were built with the container's `-march=native`,
+  i.e. for the runner's AVX-512 CPU: `libobt.so` in openbox-homestead 3.6.0.r7671.gc91ce46-2 had zmm
+  instructions, openbox died with SIGILL on the Zen 3 desktop and ly logins bounced back. Fixed: CI
+  forces x86-64-v3 flags (C/C++ and Rust) and fails on any zmm instruction (see README "CI").
+
+- Superseded (2026-11-11): see the 2026-11-11 entry above; held only for the locally built packages.
+  2026-11-09: desktop packages installed and working. `zpt2linux-desktop` from the local repo; ly's
   "Openbox Patchwork" session runs X, openbox, tint2 and fastcompmgr all from the packages.
 
 - 2026-11-09: Mac packages back (`t2-dkms`, `t2-support`, `t2-apps`, `bankstown-lv2`, `zpt2linux-mac`),
@@ -47,6 +53,8 @@ A fresh install is CachyOS + dotfiles checkout + this repo (steps in README "Fre
   linux-cachyos-headers) and signs every package on push to main, weekly and by hand, and publishes
   the signed repo as the rolling GitHub release `repo`. Signing key `zpt2linux.asc`. The local
   `file://` repo stays for testing unpushed changes. (2026-11-09)
+- CI builds target x86-64-v3 (`-march=x86-64-v3 -mtune=generic`, Rust `target-cpu=x86-64-v3`): both
+  machines support it (Ryzen 5 5600G, i9-9880H), neither has AVX-512. (2026-11-11)
 - Name: zpt2linux. Layered on CachyOS. (2026-11-09)
 - Renamed zpt2linux → zpt-cachy: it's my CachyOS setup, not a distro. (2026-11-09) Repo `[zpt-cachy]`,
   meta-packages `zpt-cachy-desktop`/`zpt-cachy-mac` (they replace the `zpt2linux-*` ones), GitHub repo

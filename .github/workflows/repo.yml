@@ -25,6 +25,15 @@ jobs:
       - name: Set up container
         run: |
           pacman -Syu --noconfirm --needed base-devel git namcap dkms linux-cachyos-headers clang llvm lld github-cli
+          # Portable x86-64-v3 code, not the runner's CPU: -march=native there emits AVX-512, which
+          # SIGILLs on both target machines (Zen 3 desktop, i9-9880H Mac).
+          shopt -s nullglob
+          confs=(/etc/makepkg.conf /etc/makepkg.conf.d/*.conf)
+          sed -E -i 's/-march=[^ "]+/-march=x86-64-v3/g; s/-mtune=[^ "]+/-mtune=generic/g
+            s/target-cpu=[^ "]+/target-cpu=x86-64-v3/g
+            /^RUSTFLAGS="/{/target-cpu=/!s/^RUSTFLAGS="/RUSTFLAGS="-C target-cpu=x86-64-v3 /;}' "${confs[@]}"
+          grep -q '^RUSTFLAGS=' "${confs[@]}" || echo 'RUSTFLAGS="-C target-cpu=x86-64-v3"' >> /etc/makepkg.conf
+          grep -hE '^(CFLAGS|CXXFLAGS|RUSTFLAGS|LDFLAGS)' "${confs[@]}"
           useradd -m builder
           echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
       - uses: actions/checkout@v4
@@ -36,6 +45,22 @@ jobs:
           b pkgs/xlibre-xserver-homestead/
           pacman -U --noconfirm repo/xlibre-xserver-homestead-*.pkg.tar.zst
           b $(ls -d pkgs/*/ | grep -v xlibre-xserver-homestead)
+      - name: No AVX-512 (zmm) instructions
+        run: |
+          bad=
+          for p in repo/*.pkg.tar.zst; do
+            d=$(mktemp -d); bsdtar -xf "$p" -C "$d"
+            while IFS= read -r -d '' f; do
+              # grep without -q: an early exit would SIGPIPE objdump, and pipefail would hide the match
+              if [ "$(head -c4 "$f")" = $'\x7fELF' ] && objdump -d "$f" | grep '%zmm' >/dev/null; then
+                bad="$bad
+          - $(basename "$p"): ${f#$d/}"
+              fi
+            done < <(find "$d" -type f -print0)
+            rm -rf "$d"
+          done
+          if [ -n "$bad" ]; then printf '## AVX-512 found (target is x86-64-v3)%s\n' "$bad" | tee -a "$GITHUB_STEP_SUMMARY"; exit 1; fi
+          echo "## No AVX-512 (zmm) instructions in any package" >> "$GITHUB_STEP_SUMMARY"
       - name: namcap (report only)
         run: |
           for f in repo/*.pkg.tar.zst; do namcap "$f"; done | tee namcap.txt
