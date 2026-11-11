@@ -76,7 +76,8 @@ directories (their dependencies live only in this repo, or are runtime-only).
 2. builds every package with `build.sh` (the X server first, installed, then the rest; build deps come
    from the CachyOS/Arch repos via `makepkg -s`);
 3. fails the run if any ELF file in any package contains AVX-512 (`%zmm`) instructions (`objdump -d`;
-   the summary lists package and file): neither target machine has AVX-512;
+   the summary lists package and file): neither target machine has AVX-512. `t2-drop` and `t2-journal` are
+   exempt: their `zlib-rs` dependency has AVX-512 paths it selects only after a runtime CPU check;
 4. runs `namcap` on every package: report only, in the run's summary page (namcap's errors include
    false positives, so they don't fail the run);
 5. builds every DKMS module set with `dkms build` against the latest `linux-cachyos-headers`

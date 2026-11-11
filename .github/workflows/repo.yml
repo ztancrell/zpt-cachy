@@ -49,6 +49,8 @@ jobs:
         run: |
           bad=
           for p in repo/*.pkg.tar.zst; do
+            # zlib-rs (t2-drop, t2-journal) ships AVX-512 code it only runs after a runtime CPUID check
+            case $(basename "$p") in t2-drop-*|t2-journal-*) continue ;; esac
             d=$(mktemp -d); bsdtar -xf "$p" -C "$d"
             while IFS= read -r -d '' f; do
               # grep without -q: an early exit would SIGPIPE objdump, and pipefail would hide the match
