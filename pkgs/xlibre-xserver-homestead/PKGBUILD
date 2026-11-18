@@ -1,8 +1,8 @@
 # Based on the AUR xlibre-xserver PKGBUILD; built from homestead's fork, options as homestead builds it.
 # One package (server + common + devel) instead of the AUR split; Xephyr/Xvfb/Xnest are not built.
 pkgname=xlibre-xserver-homestead
-_commit=09753e7f51e39077332efe8895c0efb231326344
-pkgver=25.2.0.r24104.g09753e7
+_commit=dd834ad3e2f386761f3c3cd9ce0923e06fe7fadc
+pkgver=25.2.0.r24109.gdd834ad
 pkgrel=1
 pkgdesc="XLibre X server (homestead fork), incl. common files and SDK"
 arch=('x86_64')
