@@ -36,7 +36,10 @@ jobs:
           grep -hE '^(CFLAGS|CXXFLAGS|RUSTFLAGS|LDFLAGS)' "${confs[@]}"
           useradd -m builder
           echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          # Package builds run third-party code as builder (NOPASSWD sudo): keep the token out of .git/config.
+          persist-credentials: false
       - name: Build
         run: |
           chown -R builder .
@@ -94,13 +97,23 @@ jobs:
           rm -f zpt-cachy.*
           repo-add --sign --verify --key "$KEY" zpt-cachy.db.tar.zst *.pkg.tar.zst
       - name: Publish rolling release "repo"
-        if: github.ref == 'refs/heads/main'
+        # The weekly cron run only checks that everything still builds (DKMS against new kernels).
+        if: github.ref == 'refs/heads/main' && github.event_name != 'schedule'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir dist && cp -L repo/* dist/  # real files: pacman fetches zpt-cachy.db, not the symlink target
-          gh release delete repo -R "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
-          gh release create repo dist/* -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "zpt-cachy pacman repo" \
-            --notes "Signed pacman repo built from $GITHUB_SHA. Server = https://github.com/$GITHUB_REPOSITORY/releases/download/repo"
+          r=(repo -R "$GITHUB_REPOSITORY")
+          notes="Signed pacman repo built from $GITHUB_SHA. Server = https://github.com/$GITHUB_REPOSITORY/releases/download/repo"
+          gh release view "${r[@]}" >/dev/null 2>&1 ||
+            gh release create "${r[@]}" --target "$GITHUB_SHA" --title "zpt-cachy pacman repo" --notes "$notes"
+          # The release is never missing: packages go up first, the db (zpt-cachy.db/.files and .sig) last, so
+          # the db never names a package that is not there yet; stale assets go only after the new db is up.
+          shopt -s extglob
+          gh release upload "${r[@]}" --clobber dist/!(zpt-cachy.*)
+          gh release upload "${r[@]}" --clobber dist/zpt-cachy.*
+          gh release view "${r[@]}" --json assets -q '.assets[].name' | sort | comm -23 - <(ls dist | sort) |
+            while read -r a; do gh release delete-asset "${r[@]}" "$a" --yes; done
+          gh release edit "${r[@]}" --notes "$notes"
           # GitHub rewrites some characters in asset names; any rename would break pacman downloads.
-          diff <(ls dist | sort) <(gh release view repo -R "$GITHUB_REPOSITORY" --json assets -q '.assets[].name' | sort)
+          diff <(ls dist | sort) <(gh release view "${r[@]}" --json assets -q '.assets[].name' | sort)

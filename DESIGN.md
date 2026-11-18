@@ -53,6 +53,8 @@ A fresh install is CachyOS + dotfiles checkout + this repo (steps in README "Fre
   linux-cachyos-headers) and signs every package on push to main, weekly and by hand, and publishes
   the signed repo as the rolling GitHub release `repo`. Signing key `zpt2linux.asc`. The local
   `file://` repo stays for testing unpushed changes. (2026-11-09)
+- Publishing updates the release `repo` in place (packages, then db, then stale assets removed), so
+  it is never missing; the weekly cron run only checks (DKMS, builds) and never publishes. (2026-11-18)
 - CI builds target x86-64-v3 (`-march=x86-64-v3 -mtune=generic`, Rust `target-cpu=x86-64-v3`): both
   machines support it (Ryzen 5 5600G, i9-9880H), neither has AVX-512. (2026-11-11)
 - Name: zpt2linux. Layered on CachyOS. (2026-11-09)

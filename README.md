@@ -9,9 +9,7 @@ as-is, plus this local pacman repo with my homestead X stack and T2 Mac packages
 - `pkgs/<name>/PKGBUILD`: one directory per package.
   - `xlibre-xserver-homestead`: XLibre X server (ztancrell/xserver). Server, common files and SDK in one package.
     Replaces `xlibre-xserver`, `xlibre-xserver-common`, `xlibre-xserver-devel` (and provides `xorg-server*`).
-  - `xlibre-input-libinput-homestead`: libinput input driver. homestead's submodule commit is upstream
-    X11Libre/xf86-input-libinput master and not yet in the fork (ztancrell/xf86-input-libinput), so it is fetched
-    from upstream. Replaces `xlibre-input-libinput` / `xf86-input-libinput`.
+  - `xlibre-input-libinput-homestead`: libinput input driver (ztancrell/xf86-input-libinput). Replaces `xlibre-input-libinput` / `xf86-input-libinput`.
   - `openbox-homestead`: Openbox (ztancrell/openbox-patchwork), `--enable-debug`. Replaces `openbox`.
   - `fastcompmgr-homestead`: compositor (ztancrell/fastcompmgr). Replaces `fastcompmgr`.
   - `tint2-homestead`: panel (ztancrell/tint2), no `tint2conf`. Replaces `tint2`.
@@ -41,7 +39,7 @@ as-is, plus this local pacman repo with my homestead X stack and T2 Mac packages
 - `zpt-cachy.asc`: the repo's public signing key.
 
 The homestead packages build from the forks at the commits the `../homestead` submodules point at
-(`_commit=` in each PKGBUILD; the libinput driver comes from upstream, see above). To pick up new homestead work: bump `_commit` and `pkgver`, rerun `./build.sh`.
+(`_commit=` in each PKGBUILD). To pick up new homestead work: bump `_commit` and `pkgver`, rerun `./build.sh`.
 Build options follow `../homestead/CLAUDE.md`, with prefix `/usr` instead of `/usr/local`.
 
 Not packaged from KaiT2en: `t2sep` (retired upstream), `linux-apfs-rw` (third-party; AUR has it),
@@ -65,6 +63,11 @@ If makepkg reports missing build dependencies, install them with `sudo pacman -S
 `~/.cargo` does not satisfy makepkg. `build.sh` skips the dep check for `zpt-cachy-*` and `*-dkms`
 directories (their dependencies live only in this repo, or are runtime-only).
 
+## License
+
+The repo's own files (PKGBUILDs, `build.sh`, CI, docs) are MIT, see `LICENSE`. Each package's
+software keeps its upstream license (`license=` in its PKGBUILD).
+
 ## CI
 
 `.github/workflows/repo.yml` runs on every push to `main`, weekly (Monday 04:17 UTC) and by hand
@@ -81,11 +84,12 @@ directories (their dependencies live only in this repo, or are runtime-only).
 4. runs `namcap` on every package: report only, in the run's summary page (namcap's errors include
    false positives, so they don't fail the run);
 5. builds every DKMS module set with `dkms build` against the latest `linux-cachyos-headers`
-   (summary lists each one); any failure fails the run, which is what the weekly run is for;
+   (summary lists each one); any failure fails the run, which is what the weekly run is for (it stops
+   here: scheduled runs never publish);
 6. signs every package and the db with the repo key (private key in the `GPG_PRIVATE_KEY` secret);
-7. only if all of that passed: replaces the rolling release [`repo`](https://github.com/ztancrell/zpt-cachy/releases/tag/repo)
-   with the new packages, `.sig` files and `zpt-cachy.db`/`.files` (+ `.sig`), so it always mirrors the
-   current repo.
+7. only if all of that passed: updates the rolling release [`repo`](https://github.com/ztancrell/zpt-cachy/releases/tag/repo)
+   in place, so it always mirrors the current repo and is never missing: new packages and `.sig` files
+   first, then `zpt-cachy.db`/`.files` (+ `.sig`), then it deletes assets no longer in the repo.
 
 Results: <https://github.com/ztancrell/zpt-cachy/actions>. Signing key `zpt-cachy.asc`, fingerprint
 `3A6F07D9D227FB888250B4A3AB192A45ADE20A55`.
@@ -131,7 +135,7 @@ it is now only for testing local changes. The everyday source is the signed GitH
 Then, on the desktop:
 
 ```sh
-sudo pacman -Sy zpt-cachy-desktop
+sudo pacman -Syu zpt-cachy-desktop
 ```
 
 (on the Mac, see [below](#on-the-mac-macbookpro161))
@@ -146,6 +150,22 @@ starts `/usr/local/bin/fastcompmgr` by full path) until they are removed or the 
 Once the `/usr/local` builds are removed, also drop `/usr/local/share/xsessions` from `xsessions` in
 `/etc/ly/config.ini` (ly otherwise logs "failed to crawl x11 session directory").
 
+## Rollback
+
+If an X server or libinput driver update breaks the session, switch to a free TTY (Ctrl+Alt+F3; ly sits on tty2), log in,
+and reinstall the previous versions from pacman's cache, both in one command (the driver is built
+against the server's ABI):
+
+```sh
+ls /var/cache/pacman/pkg/xlibre-*-homestead-*
+sudo pacman -U /var/cache/pacman/pkg/xlibre-xserver-homestead-<old>.pkg.tar.zst \
+  /var/cache/pacman/pkg/xlibre-input-libinput-homestead-<old>.pkg.tar.zst
+sudo systemctl restart ly@tty2
+```
+
+ly runs as the template unit `ly@<tty>` (`systemctl list-units 'ly@*'` shows which). `paccache`
+(pacman-contrib) keeps the 3 most recent versions of each package by default.
+
 ## Fresh install
 
 1. Install CachyOS.
@@ -159,7 +179,7 @@ Once the `/usr/local` builds are removed, also drop `/usr/local/share/xsessions`
 
    If `checkout` refuses because files already exist (fresh-install defaults), move those aside and rerun it.
 3. Follow [Install](#install): trust the key, add the `[zpt-cachy]` repo, and
-   `sudo pacman -Sy zpt-cachy-desktop`. (Clone this repo to `~/projects/zpt-cachy` only to build locally.)
+   `sudo pacman -Syu zpt-cachy-desktop`. (Clone this repo to `~/projects/zpt-cachy` only to build locally.)
 4. Set `x_cmd = /usr/bin/X` in `/etc/ly/config.ini`.
 5. Turn the hourly dotfiles backup back on: `systemctl --user enable --now dotfiles-backup.timer`.
 
@@ -173,7 +193,7 @@ Once the `/usr/local` builds are removed, also drop `/usr/local/share/xsessions`
 3. Install:
 
    ```sh
-   sudo pacman -Sy linux-cachyos-headers zpt-cachy-mac
+   sudo pacman -Syu linux-cachyos-headers zpt-cachy-mac
    ```
 
    dkms builds the modules for every installed kernel with headers. CachyOS kernels are clang-built;

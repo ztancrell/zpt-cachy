@@ -1,6 +1,4 @@
 # Based on the AUR xlibre-input-libinput PKGBUILD; built from homestead's fork.
-# homestead's submodule points at 7fb6bd7, which is upstream X11Libre master but not yet pushed to the fork:
-# fetch it from upstream. The fork carries no changes of its own; switch back to it once it has 7fb6bd7.
 pkgname=xlibre-input-libinput-homestead
 _commit=7fb6bd7a6945fb69820a2b307f6eae413f0114c9
 pkgver=25.0.1.r377.g7fb6bd7
@@ -14,7 +12,7 @@ makedepends=('git' 'meson' 'libx11' 'libxi' 'xlibre-xserver-devel' 'X-ABI-XINPUT
 provides=('xlibre-input-libinput' 'xf86-input-libinput')
 conflicts=('xlibre-input-libinput' 'xf86-input-libinput'
            'X-ABI-XINPUT_VERSION<26' 'X-ABI-XINPUT_VERSION>=27')
-source=("git+https://github.com/X11Libre/xf86-input-libinput.git#commit=${_commit}")
+source=("git+https://github.com/ztancrell/xf86-input-libinput.git#commit=${_commit}")
 sha256sums=('SKIP')
 
 pkgver() {
